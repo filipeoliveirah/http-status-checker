@@ -13,7 +13,7 @@ const BULK_FILTERS = [
 
 function SortableHead({ label, active, asc, onClick }) {
   return (
-    <th className="cursor-pointer px-4 py-3 hover:text-zinc-600" onClick={onClick}>
+    <th className="text-nowrap cursor-pointer px-4 py-3 hover:text-zinc-600" onClick={onClick}>
       {label} <span className={active ? 'text-indigo-600' : ''}>{active ? (asc ? '↑' : '↓') : '↕'}</span>
     </th>
   )
