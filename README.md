@@ -1,16 +1,66 @@
-# React + Vite
+# HTTP Status Checker
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Modern web app to check HTTP status codes for a single URL or in bulk, with a clean UI and fast feedback.
 
-Currently, two official plugins are available:
+## Stack
+- React 19 + Vite 8
+- Tailwind CSS 4 (via `@tailwindcss/vite`)
+- ESLint 9
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
+- Single URL check with:
+- Status code, status label, response time, protocol, and response details
+- CORS-aware fallback detection (`direct`, `no-cors`, and unreachable/timeout states)
+- Bulk URL check with:
+- Configurable concurrency
+- Real-time progress and counters
+- Filters by class (`2xx`, `3xx`, `4xx`, `5xx`, `CORS`, `error`)
+- Sorting (URL, status, elapsed time)
+- CSV export
 
-## React Compiler
+## Project Architecture
+The project follows a layered structure focused on separation of concerns:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- `src/domain`: Pure business rules and status catalog
+- `src/application`: Use cases and orchestration (`checkSingleUrl`, task pool, CSV export)
+- `src/infra`: HTTP gateway and fetch behavior
+- `src/shared`: Generic helpers (URL normalization, time formatting)
+- `src/ui/hooks`: UI state and interaction logic
+- `src/ui/components`: Presentational and feature components (`single`, `bulk`, `shared`)
 
-## Expanding the ESLint configuration
+## Getting Started
+### 1. Install dependencies
+```bash
+npm install
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 2. Run development server
+```bash
+npm run dev
+```
+
+### 3. Build for production
+```bash
+npm run build
+```
+
+### 4. Preview production build
+```bash
+npm run preview
+```
+
+### 5. Lint
+```bash
+npm run lint
+```
+
+## Available Scripts
+- `npm run dev`: Starts Vite dev server
+- `npm run build`: Builds the production bundle
+- `npm run preview`: Serves the production build locally
+- `npm run lint`: Runs ESLint
+
+## Notes
+- URLs without protocol are normalized to `https://`.
+- Browser security policies can hide exact status codes in some cases (CORS restrictions).
+- Timeout is set in the HTTP gateway to avoid hanging requests.
