@@ -51,7 +51,7 @@ export function BulkModePanel({
             </label>
             <button
               type="submit"
-              className="rounded-full bg-zinc-900 px-5 py-2 text-sm font-medium text-white transition hover:bg-zinc-800"
+              className="cursor-pointer rounded-full bg-zinc-900 px-5 py-2 text-sm font-medium text-white transition hover:bg-zinc-800"
             >
               {bulkRunning ? 'Parar' : 'Verificar todas'}
             </button>
@@ -71,7 +71,7 @@ export function BulkModePanel({
             <button
               type="button"
               onClick={onExportCsv}
-              className="rounded-full border border-zinc-300 bg-white px-4 py-2 text-xs font-medium text-zinc-700 transition hover:bg-zinc-50"
+              className="cursor-pointer rounded-full border border-zinc-300 bg-white px-4 py-2 text-xs font-medium text-zinc-700 transition hover:bg-zinc-50"
             >
               Exportar CSV
             </button>

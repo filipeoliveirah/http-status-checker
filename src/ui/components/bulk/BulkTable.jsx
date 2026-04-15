@@ -106,7 +106,7 @@ export function BulkTable({ rows, running, sort, onSort, filters, onToggleFilter
                   key={filter.key}
                   type="button"
                   onClick={() => onToggleFilter(filter.key)}
-                  className={`rounded-full border px-3 py-1 text-xs font-medium ${
+                  className={`cursor-pointer rounded-full border px-3 py-1 text-xs font-medium ${
                     filter.chipClass
                   } ${filters[filter.key] ? 'opacity-100' : 'opacity-40'}`}
                 >

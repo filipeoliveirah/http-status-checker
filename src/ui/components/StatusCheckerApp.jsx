@@ -53,11 +53,14 @@ export function StatusCheckerApp() {
             <img
               src="https://outlimit.com.br/wp-content/uploads/2026/03/logo-out-limit-creative-light.png"
               alt="Out Limit"
-              className="h-8 w-auto"
+              className="h-auto w-38"
             />
           </a>
+
           <div className="mx-4 h-5 w-px bg-zinc-300" />
-          <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600">HTTP Status Checker</span>
+
+          <span className="rounded-full hidden md:flex bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600">HTTP Status Checker</span>
+
           <div className="ml-auto">
             <a
               href="https://outlimit.com.br"
@@ -85,7 +88,7 @@ export function StatusCheckerApp() {
             <button
               type="button"
               onClick={() => setMode('single')}
-              className={`rounded-full px-5 py-2 text-sm font-medium transition ${
+              className={`cursor-pointer rounded-full px-5 py-2 text-sm font-medium transition ${
                 mode === 'single' ? 'bg-zinc-900 text-white' : 'text-zinc-500'
               }`}
             >
@@ -94,7 +97,7 @@ export function StatusCheckerApp() {
             <button
               type="button"
               onClick={() => setMode('bulk')}
-              className={`rounded-full px-5 py-2 text-sm font-medium transition ${
+              className={`cursor-pointer rounded-full px-5 py-2 text-sm font-medium transition ${
                 mode === 'bulk' ? 'bg-zinc-900 text-white' : 'text-zinc-500'
               }`}
             >

@@ -35,7 +35,7 @@ export function SingleModePanel({
         />
         <button
           type="submit"
-          className="rounded-full bg-zinc-900 px-5 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-55"
+          className="cursor-pointer rounded-full bg-zinc-900 px-5 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-55"
           disabled={singleLoading}
         >
           {singleLoading ? 'Verificando...' : 'Verificar'}
@@ -48,7 +48,7 @@ export function SingleModePanel({
             key={url}
             type="button"
             onClick={() => onApplySample(url)}
-            className="rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs text-zinc-600 transition hover:border-indigo-500 hover:text-indigo-600"
+            className="cursor-pointer rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs text-zinc-600 transition hover:border-indigo-500 hover:text-indigo-600"
           >
             {url.includes('httpbin') ? url.replace('https://httpbin.org/', '') : extractHostname(url)}
           </button>
