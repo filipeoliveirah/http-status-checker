@@ -37,7 +37,7 @@ export function BulkModePanel({
           </p>
           <div className="flex flex-wrap items-center gap-3">
             <label className="flex items-center gap-2 text-xs text-zinc-600">
-              Paralelas:
+              Páginas:
               <select
                 value={concurrency}
                 onChange={(event) => onConcurrencyChange(Number(event.target.value))}
