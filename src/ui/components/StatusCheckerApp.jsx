@@ -53,13 +53,9 @@ export function StatusCheckerApp() {
             <img
               src="https://outlimit.com.br/wp-content/uploads/2026/03/logo-out-limit-creative-light.png"
               alt="Out Limit"
-              className="h-auto w-38"
+              className="h-auto w-42"
             />
           </a>
-
-          <div className="mx-4 h-5 w-px bg-zinc-300" />
-
-          <span className="rounded-full hidden md:flex bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600">HTTP Status Checker</span>
 
           <div className="ml-auto">
             <a
@@ -82,7 +78,9 @@ export function StatusCheckerApp() {
           <h1 className="mx-auto mt-5 max-w-xl text-4xl font-bold tracking-tight text-zinc-900 md:text-5xl">
             HTTP Status Checker
           </h1>
-          <p className="mx-auto mt-3 max-w-lg text-zinc-600">Verifique o status de uma URL ou centenas de uma vez.</p>
+          <p className="mx-auto mt-3 max-w-lg text-zinc-600">
+            Verifique o status de uma única URL ou analise centenas de links simultaneamente com rapidez e precisão.
+          </p>
 
           <div className="mt-8 inline-flex rounded-full border border-zinc-300 bg-white p-1 shadow-sm">
             <button
