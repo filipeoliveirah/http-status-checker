@@ -137,6 +137,38 @@ export function StatusCheckerApp() {
             />
           )}
         </section>
+
+        {/* CTA Diagnóstico Out Limit */}
+        <section className="mt-24 mb-8 rounded-[24px] bg-[#0d0d0d] px-6 py-16 text-center md:px-12 lg:py-20 shadow-2xl relative overflow-hidden border border-white/10">
+          {/* Background glow effect */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl h-full opacity-20 pointer-events-none" style={{ background: 'radial-gradient(circle, #1633FF 0%, transparent 70%)' }}></div>
+          
+          <div className="relative z-10">
+            <span className="inline-flex items-center rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-medium text-zinc-300 uppercase tracking-widest">
+              Consultoria de TI
+            </span>
+            <h2 className="mx-auto mt-6 max-w-3xl text-3xl font-extrabold tracking-tight text-white md:text-4xl lg:text-5xl" style={{ letterSpacing: '-0.025em' }}>
+              Sua empresa está passando por instabilidades?
+            </h2>
+            <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-zinc-400 md:text-lg">
+              Reduzimos custos com TI, automatizamos processos e aceleramos a entrega técnica. 
+              Crie previsibilidade antes que falhas, retrabalho e decisões improvisadas virem prejuízo.
+            </p>
+            <div className="mt-10 flex justify-center">
+              <a
+                href="https://outlimit.com.br"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg bg-[#1633FF] px-4 py-4 text-sm font-bold text-white transition hover:bg-[#3a52ff] shadow-[0_0_24px_rgba(22,51,255,0.35)]"
+              >
+                Agendar diagnóstico gratuito
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </section>
       </main>
 
       <footer className="mt-auto border-t border-zinc-200 bg-white px-6 py-4 text-center text-xs text-zinc-400">
