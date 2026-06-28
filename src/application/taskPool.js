@@ -3,6 +3,7 @@ export function runTaskPool({ tasks, limit, onTaskDone, onIdle }) {
   let active = 0
   let completed = 0
   let stopped = false
+  const controller = new AbortController()
 
   function maybeIdle() {
     if ((stopped || completed === tasks.length) && active === 0) {
@@ -21,7 +22,7 @@ export function runTaskPool({ tasks, limit, onTaskDone, onIdle }) {
       index += 1
       active += 1
 
-      Promise.resolve(tasks[currentIndex]())
+      Promise.resolve(tasks[currentIndex](controller.signal))
         .then((result) => {
           onTaskDone?.(currentIndex, result)
         })
@@ -46,6 +47,8 @@ export function runTaskPool({ tasks, limit, onTaskDone, onIdle }) {
   return {
     stop() {
       stopped = true
+      // Cancel in-flight requests instead of letting them run to completion.
+      controller.abort()
     },
   }
 }

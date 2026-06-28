@@ -92,6 +92,9 @@ export function useBulkChecker() {
   }
 
   function stop() {
+    // Invalidate the current run so any task that resolves right after Stop is
+    // ignored (its guard checks runId) and can't overwrite the "interrompido" row.
+    runIdRef.current += 1
     poolRef.current?.stop()
     poolRef.current = null
     setRunning(false)
@@ -134,7 +137,7 @@ export function useBulkChecker() {
     setRows(initialRows)
     setRunning(true)
 
-    const tasks = urls.map((url) => () => checkUrlStatus(url))
+    const tasks = urls.map((url) => (signal) => checkUrlStatus(url, signal))
 
     poolRef.current = runTaskPool({
       tasks,

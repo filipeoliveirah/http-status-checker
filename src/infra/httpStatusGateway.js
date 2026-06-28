@@ -1,10 +1,19 @@
 const REQUEST_TIMEOUT_MS = 12000
 
-function fetchViaServer(url) {
+// Combines the per-request timeout with an optional caller signal (e.g. the bulk
+// "Parar" button) so either one can abort the fetch.
+function requestSignal(signal) {
+  const timeout = AbortSignal.timeout(REQUEST_TIMEOUT_MS)
+  if (!signal) return timeout
+  if (typeof AbortSignal.any === 'function') return AbortSignal.any([signal, timeout])
+  return signal.aborted ? signal : timeout
+}
+
+function fetchViaServer(url, signal) {
   const params = new URLSearchParams({ url })
   return fetch(`/api/check?${params.toString()}`, {
     method: 'GET',
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    signal: requestSignal(signal),
     headers: {
       Accept: 'application/json',
     },
@@ -22,11 +31,11 @@ function fetchViaServer(url) {
   })
 }
 
-function fetchWithCors(url) {
+function fetchWithCors(url, signal) {
   return fetch(url, {
     mode: 'cors',
     redirect: 'follow',
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    signal: requestSignal(signal),
   }).then((response) => ({
     ok: true,
     mode: 'direct',
@@ -38,11 +47,11 @@ function fetchWithCors(url) {
   }))
 }
 
-function probeNoCors(url) {
+function probeNoCors(url, signal) {
   return fetch(url, {
     mode: 'no-cors',
     redirect: 'follow',
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    signal: requestSignal(signal),
   }).then(() => ({
     ok: true,
     mode: 'no-cors',
@@ -53,13 +62,13 @@ function isTimeoutError(error) {
   return error?.name === 'AbortError' || error?.name === 'TimeoutError'
 }
 
-export async function checkUrlStatus(url) {
+export async function checkUrlStatus(url, signal) {
   const startedAt = Date.now()
 
   // Primary path: server-side check through Vercel function.
   // This avoids browser CORS limitations and gives real status codes.
   try {
-    const serverResult = await fetchViaServer(url)
+    const serverResult = await fetchViaServer(url, signal)
     return {
       ...serverResult,
       elapsed: serverResult.elapsed ?? Date.now() - startedAt,
@@ -70,7 +79,7 @@ export async function checkUrlStatus(url) {
   }
 
   try {
-    const result = await fetchWithCors(url)
+    const result = await fetchWithCors(url, signal)
     return {
       ...result,
       elapsed: Date.now() - startedAt,
@@ -88,7 +97,7 @@ export async function checkUrlStatus(url) {
   }
 
   try {
-    await probeNoCors(url)
+    await probeNoCors(url, signal)
     return {
       ok: true,
       mode: 'no-cors',
