@@ -12,9 +12,16 @@ const BULK_FILTERS = [
 ]
 
 function SortableHead({ label, active, asc, onClick }) {
+  const ariaSort = active ? (asc ? 'ascending' : 'descending') : 'none'
   return (
-    <th className="text-nowrap cursor-pointer px-4 py-3 hover:text-zinc-600" onClick={onClick}>
-      {label} <span className={active ? 'text-indigo-600' : ''}>{active ? (asc ? '↑' : '↓') : '↕'}</span>
+    <th className="text-nowrap px-0 py-0" aria-sort={ariaSort}>
+      <button
+        type="button"
+        onClick={onClick}
+        className="flex w-full cursor-pointer items-center gap-1 px-4 py-3 text-left uppercase tracking-wider hover:text-zinc-600"
+      >
+        {label} <span className={active ? 'text-indigo-600' : ''}>{active ? (asc ? '↑' : '↓') : '↕'}</span>
+      </button>
     </th>
   )
 }
@@ -106,6 +113,7 @@ export function BulkTable({ rows, running, sort, onSort, filters, onToggleFilter
                   key={filter.key}
                   type="button"
                   onClick={() => onToggleFilter(filter.key)}
+                  aria-pressed={filters[filter.key] !== false}
                   className={`cursor-pointer rounded-full border px-3 py-1 text-xs font-medium ${
                     filter.chipClass
                   } ${filters[filter.key] ? 'opacity-100' : 'opacity-40'}`}
@@ -121,7 +129,7 @@ export function BulkTable({ rows, running, sort, onSort, filters, onToggleFilter
       <div className="mt-3 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
-            <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-400">
+            <thead className="bg-zinc-50 text-xs uppercase tracking-wider text-zinc-500">
               <tr>
                 <SortableHead label="URL" active={sort.column === 'url'} asc={sort.asc} onClick={() => onSort('url')} />
                 <SortableHead

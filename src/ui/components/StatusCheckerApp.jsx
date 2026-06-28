@@ -16,7 +16,6 @@ export function StatusCheckerApp() {
   const bulk = useBulkChecker()
 
   const bulkUrlCount = useMemo(() => parseBulkUrls(bulkInput).length, [bulkInput])
-  const visibleBulkRows = useMemo(() => bulk.sortedAndFilteredRows, [bulk.sortedAndFilteredRows])
 
   const loadingHost = singleInput.trim() ? extractHostname(ensureProtocol(singleInput.trim())) : 'servidor'
 
@@ -86,6 +85,7 @@ export function StatusCheckerApp() {
             <button
               type="button"
               onClick={() => setMode('single')}
+              aria-pressed={mode === 'single'}
               className={`cursor-pointer rounded-full px-5 py-2 text-sm font-medium transition ${
                 mode === 'single' ? 'bg-zinc-900 text-white' : 'text-zinc-500'
               }`}
@@ -95,6 +95,7 @@ export function StatusCheckerApp() {
             <button
               type="button"
               onClick={() => setMode('bulk')}
+              aria-pressed={mode === 'bulk'}
               className={`cursor-pointer rounded-full px-5 py-2 text-sm font-medium transition ${
                 mode === 'bulk' ? 'bg-zinc-900 text-white' : 'text-zinc-500'
               }`}
@@ -129,7 +130,7 @@ export function StatusCheckerApp() {
               totalRows={bulk.rows.length}
               stats={bulk.stats}
               onExportCsv={bulk.exportCsv}
-              visibleRows={visibleBulkRows}
+              visibleRows={bulk.sortedAndFilteredRows}
               sort={bulk.sort}
               onSort={bulk.toggleSort}
               filters={bulk.filters}
@@ -171,7 +172,7 @@ export function StatusCheckerApp() {
         </section>
       </main>
 
-      <footer className="mt-auto border-t border-zinc-200 bg-white px-6 py-4 text-center text-xs text-zinc-400">
+      <footer className="mt-auto border-t border-zinc-200 bg-white px-6 py-4 text-center text-xs text-zinc-500">
         Feito com <span className="text-indigo-600">💙</span> pela{' '}
         <a href="https://outlimit.com.br" target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline">
           Out Limit
