@@ -24,13 +24,16 @@ export function SingleModePanel({
     <section className="mx-auto mt-6 max-w-3xl text-left">
       <form onSubmit={onSubmitSingle} className="flex items-center gap-2 rounded-full border border-zinc-300 bg-white px-5 py-2 shadow-sm">
         <input
-          type="url"
+          type="text"
+          inputMode="url"
           value={singleInput}
           onChange={(event) => onSingleInputChange(event.target.value)}
-          placeholder="https://exemplo.com"
+          placeholder="exemplo.com"
+          aria-label="URL para verificar"
           className="w-full border-none bg-transparent text-sm text-zinc-800 outline-none placeholder:text-zinc-400"
           autoComplete="off"
           autoCapitalize="off"
+          autoCorrect="off"
           spellCheck={false}
         />
         <button

@@ -10,10 +10,13 @@ export function useSingleChecker() {
     if (!rawUrl.trim() || loading) return
 
     setLoading(true)
-    const response = await checkSingleUrl(rawUrl)
-    setCheckedUrl(response.url)
-    setResult(response.result)
-    setLoading(false)
+    try {
+      const response = await checkSingleUrl(rawUrl)
+      setCheckedUrl(response.url)
+      setResult(response.result)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return {

@@ -47,10 +47,10 @@ export const STATUS_LABELS = {
 }
 
 export function classifyStatus(code) {
+  if (code >= 100 && code < 200) return '1'
   if (code >= 200 && code < 300) return '2'
   if (code >= 300 && code < 400) return '3'
   if (code >= 400 && code < 500) return '4'
-  if (code >= 500) return '5'
   return '5'
 }
 
@@ -61,6 +61,7 @@ export function getStatusLabel(code) {
 export function getStatusIcon(code) {
   const statusClass = classifyStatus(code)
   return {
+    1: 'ℹ',
     2: '✓',
     3: '↪',
     4: '⚠',
