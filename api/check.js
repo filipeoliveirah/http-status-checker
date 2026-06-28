@@ -1,7 +1,13 @@
-import dns from 'node:dns/promises'
+import http from 'node:http'
+import https from 'node:https'
 import net from 'node:net'
+import { lookup as dnsLookup } from 'node:dns'
+import { lookup as dnsLookupAsync } from 'node:dns/promises'
 
-const REQUEST_TIMEOUT_MS = 12000
+// Keep the request timeout safely below Vercel's function maxDuration (see
+// vercel.json) so the graceful timeout below actually fires before the platform
+// kills the invocation.
+const REQUEST_TIMEOUT_MS = 9000
 const MAX_REDIRECTS = 5
 const RATE_LIMIT_WINDOW_MS = 60_000
 const RATE_LIMIT_MAX_REQUESTS = 120
@@ -47,13 +53,13 @@ function isPrivateIpv6(ipv6) {
   return false
 }
 
-function isPrivateIp(ipAddress) {
+export function isPrivateIp(ipAddress) {
   if (net.isIP(ipAddress) === 4) return isPrivateIpv4(ipAddress)
   if (net.isIP(ipAddress) === 6) return isPrivateIpv6(ipAddress)
   return false
 }
 
-function isBlockedHostName(hostname) {
+export function isBlockedHostName(hostname) {
   const normalizedHost = hostname.toLowerCase().replace(/\.$/, '')
   return normalizedHost === 'localhost' || normalizedHost.endsWith('.local') || normalizedHost.endsWith('.internal')
 }
@@ -69,7 +75,7 @@ async function assertSafeHostname(hostname) {
   }
 
   if (!ipVersion) {
-    const addresses = await dns.lookup(hostname, { all: true, verbatim: true })
+    const addresses = await dnsLookupAsync(hostname, { all: true, verbatim: true })
     if (!addresses.length || addresses.some((entry) => isPrivateIp(entry.address))) {
       throw new Error('blocked_host')
     }
@@ -82,6 +88,32 @@ async function assertSafeUrl(url) {
   }
 
   await assertSafeHostname(url.hostname)
+}
+
+// Custom DNS lookup used at *connection time*. Validating here (instead of only
+// before fetch) closes the DNS-rebinding / TOCTOU window: the IP we hand to the
+// socket is exactly the IP we validated. Host header + TLS SNI still use the
+// original hostname, so HTTPS keeps working normally.
+function safeLookup(hostname, options, callback) {
+  dnsLookup(hostname, { all: true, verbatim: true }, (error, addresses) => {
+    if (error) {
+      callback(error)
+      return
+    }
+    // Validate *every* resolved address; block the whole host if any is private.
+    if (!addresses.length || addresses.some((entry) => isPrivateIp(entry.address))) {
+      callback(new Error('blocked_host'))
+      return
+    }
+    // Honor the `all` flag so the socket layer keeps Happy-Eyeballs (autoSelectFamily)
+    // and can fall back across IPv6/IPv4 — every returned address is already validated.
+    if (options?.all) {
+      callback(null, addresses)
+      return
+    }
+    const [first] = addresses
+    callback(null, first.address, first.family)
+  })
 }
 
 function createTimeoutSignal() {
@@ -110,6 +142,14 @@ function checkRateLimit(clientKey) {
   const bucket = rateBuckets.get(clientKey)
 
   if (!bucket || now - bucket.startedAt > RATE_LIMIT_WINDOW_MS) {
+    // Best-effort, per-instance limiter. Serverless instances are ephemeral and
+    // run in parallel, so this is NOT a global rate limit — for that use a shared
+    // store (Vercel KV / Upstash). Sweep expired buckets so the Map stays bounded.
+    if (rateBuckets.size > 1000) {
+      for (const [key, value] of rateBuckets) {
+        if (now - value.startedAt > RATE_LIMIT_WINDOW_MS) rateBuckets.delete(key)
+      }
+    }
     rateBuckets.set(clientKey, { startedAt: now, count: 1 })
     return true
   }
@@ -152,27 +192,47 @@ function isAllowedOrigin(req) {
   return allowed.has(origin)
 }
 
+// Performs a single GET and resolves with the response (body is drained, never
+// buffered — we only need status + headers).
+function requestOnce(targetUrl, signal) {
+  return new Promise((resolve, reject) => {
+    const client = targetUrl.protocol === 'http:' ? http : https
+    const request = client.request(
+      targetUrl,
+      {
+        method: 'GET',
+        lookup: safeLookup,
+        signal,
+        headers: {
+          'user-agent': 'OutLimit-HTTP-Status-Checker/1.0',
+        },
+      },
+      (response) => {
+        response.resume()
+        resolve(response)
+      },
+    )
+
+    request.on('error', reject)
+    request.end()
+  })
+}
+
 async function fetchWithSafeRedirects(initialUrl, signal) {
   let currentUrl = initialUrl
 
   for (let redirectCount = 0; redirectCount <= MAX_REDIRECTS; redirectCount += 1) {
-    const response = await fetch(currentUrl.toString(), {
-      method: 'GET',
-      redirect: 'manual',
-      signal,
-      headers: {
-        'user-agent': 'OutLimit-HTTP-Status-Checker/1.0',
-      },
-    })
+    const response = await requestOnce(currentUrl, signal)
+    const status = response.statusCode
 
-    const isRedirect = response.status >= 300 && response.status < 400
+    const isRedirect = status >= 300 && status < 400
     if (!isRedirect) {
-      return response
+      return { response, finalUrl: currentUrl }
     }
 
-    const location = response.headers.get('location')
+    const location = response.headers.location
     if (!location) {
-      return response
+      return { response, finalUrl: currentUrl }
     }
 
     const nextUrl = new URL(location, currentUrl)
@@ -228,17 +288,17 @@ export default async function handler(req, res) {
   const timeout = createTimeoutSignal()
 
   try {
-    const response = await fetchWithSafeRedirects(parsedUrl, timeout.signal)
+    const { response, finalUrl } = await fetchWithSafeRedirects(parsedUrl, timeout.signal)
     timeout.clear()
 
     return res.status(200).json({
       ok: true,
       mode: 'direct',
-      code: response.status,
-      contentType: response.headers.get('content-type') ?? '',
-      server: response.headers.get('server') ?? '',
-      cacheControl: response.headers.get('cache-control') ?? '',
-      finalUrl: response.url || parsedUrl.toString(),
+      code: response.statusCode,
+      contentType: response.headers['content-type'] ?? '',
+      server: response.headers['server'] ?? '',
+      cacheControl: response.headers['cache-control'] ?? '',
+      finalUrl: finalUrl.toString(),
       elapsed: Date.now() - startedAt,
       url: parsedUrl.toString(),
     })
