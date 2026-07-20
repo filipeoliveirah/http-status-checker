@@ -90,17 +90,16 @@ export function StatusCheckerApp() {
         <section className="mt-24 mb-8 rounded-[24px] bg-[#0d0d0d] px-6 py-16 text-center md:px-12 lg:py-20 shadow-2xl relative overflow-hidden border border-white/10">
           {/* Background glow effect */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl h-full opacity-20 pointer-events-none" style={{ background: 'radial-gradient(circle, #1633FF 0%, transparent 70%)' }}></div>
-          
+
           <div className="relative z-10">
             <span className="inline-flex items-center rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-medium text-zinc-300 uppercase tracking-widest">
-              Consultoria de TI
+              Eficiência Tech
             </span>
             <h2 className="mx-auto mt-6 max-w-3xl text-3xl font-extrabold tracking-tight text-white md:text-4xl lg:text-5xl" style={{ letterSpacing: '-0.025em' }}>
-              Sua empresa está passando por instabilidades?
+              Garantimos performance, estabilidade e previsibilidade na sua operação
             </h2>
             <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-zinc-400 md:text-lg">
-              Reduzimos custos com TI, automatizamos processos e aceleramos a entrega técnica. 
-              Crie previsibilidade antes que falhas, retrabalho e decisões improvisadas virem prejuízo.
+              Elimine gargalos operacionais e acelere a entrega de software. Conectamos engenharia ágil de nuvem e processos eficientes para transformar sua infraestrutura em um motor de crescimento.
             </p>
             <div className="mt-10 flex justify-center">
               <a
