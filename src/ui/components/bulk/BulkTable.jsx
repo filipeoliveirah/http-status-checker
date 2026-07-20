@@ -1,6 +1,8 @@
 import { classifyStatus, getStatusLabel } from '../../../domain/httpStatus'
 import { formatElapsed } from '../../../shared/time'
 import { STATUS_TEXT_CLASS } from '../shared/statusStyles'
+import { Fragment, useState } from 'react'
+import { SingleResult } from '../single/SingleResult'
 
 const BULK_FILTERS = [
   { key: '2', label: '2xx', chipClass: 'bg-emerald-50 text-emerald-600 border-emerald-500' },
@@ -26,7 +28,7 @@ function SortableHead({ label, active, asc, onClick }) {
   )
 }
 
-function BulkRow({ row, running }) {
+function BulkRow({ row, running, isExpanded, onToggleExpand }) {
   if (row.status === 'pending') {
     return (
       <tr className="border-t border-zinc-100">
@@ -42,9 +44,18 @@ function BulkRow({ row, running }) {
   if (!result?.ok) {
     const label = result?.error === 'timeout' ? 'Timeout' : result?.error === 'stopped' ? 'Interrompido' : 'Inacessível'
     return (
-      <tr className="border-t border-zinc-100 hover:bg-zinc-50/60">
+      <tr
+        onClick={onToggleExpand}
+        className={`border-t border-zinc-100 hover:bg-zinc-50/60 cursor-pointer select-none transition ${isExpanded ? 'bg-zinc-50/40' : ''}`}
+      >
         <td className="max-w-[340px] truncate px-4 py-3 text-zinc-800">
-          <a href={row.url} target="_blank" rel="noreferrer" className="hover:text-indigo-600 hover:underline">
+          <a
+            href={row.url}
+            target="_blank"
+            rel="noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="hover:text-indigo-600 hover:underline"
+          >
             {row.url}
           </a>
         </td>
@@ -52,7 +63,10 @@ function BulkRow({ row, running }) {
         <td className="px-4 py-3 text-zinc-500">{label}</td>
         <td className="px-4 py-3 text-zinc-500">{result?.elapsed ? formatElapsed(result.elapsed) : '—'}</td>
         <td className="px-4 py-3">
-          <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs text-red-600">erro</span>
+          <div className="flex items-center justify-between gap-1">
+            <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs text-red-600">erro</span>
+            <span className="text-[10px] text-zinc-400 transition-transform duration-200 mr-1" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0)' }}>▼</span>
+          </div>
         </td>
       </tr>
     )
@@ -60,9 +74,18 @@ function BulkRow({ row, running }) {
 
   if (result.mode === 'no-cors') {
     return (
-      <tr className="border-t border-zinc-100 hover:bg-zinc-50/60">
+      <tr
+        onClick={onToggleExpand}
+        className={`border-t border-zinc-100 hover:bg-zinc-50/60 cursor-pointer select-none transition ${isExpanded ? 'bg-zinc-50/40' : ''}`}
+      >
         <td className="max-w-[340px] truncate px-4 py-3 text-zinc-800">
-          <a href={row.url} target="_blank" rel="noreferrer" className="hover:text-indigo-600 hover:underline">
+          <a
+            href={row.url}
+            target="_blank"
+            rel="noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="hover:text-indigo-600 hover:underline"
+          >
             {row.url}
           </a>
         </td>
@@ -70,7 +93,10 @@ function BulkRow({ row, running }) {
         <td className="px-4 py-3 text-indigo-600">Acessível (CORS)</td>
         <td className="px-4 py-3 text-zinc-500">{formatElapsed(result.elapsed)}</td>
         <td className="px-4 py-3">
-          <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs text-indigo-600">cors</span>
+          <div className="flex items-center justify-between gap-1">
+            <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs text-indigo-600">cors</span>
+            <span className="text-[10px] text-zinc-400 transition-transform duration-200 mr-1" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0)' }}>▼</span>
+          </div>
         </td>
       </tr>
     )
@@ -85,10 +111,19 @@ function BulkRow({ row, running }) {
     : 'bg-emerald-50 text-emerald-600'
 
   return (
-    <tr className="border-t border-zinc-100 hover:bg-zinc-50/60">
+    <tr
+      onClick={onToggleExpand}
+      className={`border-t border-zinc-100 hover:bg-zinc-50/60 cursor-pointer select-none transition ${isExpanded ? 'bg-zinc-50/40' : ''}`}
+    >
       <td className="max-w-[380px] px-4 py-3 text-zinc-800">
         <div className="truncate font-medium">
-          <a href={row.url} target="_blank" rel="noreferrer" className="hover:text-indigo-600 hover:underline">
+          <a
+            href={row.url}
+            target="_blank"
+            rel="noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="hover:text-indigo-600 hover:underline"
+          >
             {row.url}
           </a>
         </div>
@@ -117,9 +152,12 @@ function BulkRow({ row, running }) {
       <td className="px-4 py-3 text-zinc-600">{getStatusLabel(result.code)}</td>
       <td className="px-4 py-3 text-zinc-500">{formatElapsed(result.elapsed)}</td>
       <td className="px-4 py-3">
-        <span className={`rounded-full px-2 py-0.5 text-xs ${viaClass}`}>
-          {viaLabel}
-        </span>
+        <div className="flex items-center justify-between gap-1">
+          <span className={`rounded-full px-2 py-0.5 text-xs ${viaClass}`}>
+            {viaLabel}
+          </span>
+          <span className="text-[10px] text-zinc-400 transition-transform duration-200 mr-1" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0)' }}>▼</span>
+        </div>
       </td>
     </tr>
   )
@@ -127,6 +165,7 @@ function BulkRow({ row, running }) {
 
 export function BulkTable({ rows, running, sort, onSort, filters, onToggleFilter, stats, doneCount, totalRows }) {
   const hasAnyFinishedRows = rows.some((row) => row.status === 'done')
+  const [expandedUrl, setExpandedUrl] = useState(null)
 
   return (
     <section className="mt-5">
@@ -180,7 +219,26 @@ export function BulkTable({ rows, running, sort, onSort, filters, onToggleFilter
             </thead>
             <tbody>
               {rows.map((row) => (
-                <BulkRow key={row.url} row={row} running={running} />
+                <Fragment key={row.url}>
+                  <BulkRow
+                    row={row}
+                    running={running}
+                    isExpanded={expandedUrl === row.url}
+                    onToggleExpand={() => {
+                      if (row.status !== 'done') return
+                      setExpandedUrl(expandedUrl === row.url ? null : row.url)
+                    }}
+                  />
+                  {expandedUrl === row.url && row.status === 'done' && (
+                    <tr className="bg-zinc-50/20">
+                      <td colSpan={5} className="px-4 py-4">
+                        <div className="rounded-xl border border-zinc-200/80 bg-white p-2">
+                          <SingleResult checkedUrl={row.url} result={row.result} embed={true} />
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
               ))}
             </tbody>
           </table>

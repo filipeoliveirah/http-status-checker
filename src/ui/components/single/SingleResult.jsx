@@ -4,7 +4,7 @@ import { Metric } from '../shared/Metric'
 import { StatusPill } from '../shared/StatusPill'
 import { STATUS_TEXT_CLASS } from '../shared/statusStyles'
 
-export function SingleResult({ checkedUrl, result }) {
+export function SingleResult({ checkedUrl, result, embed = false }) {
   if (!result) return null
 
   if (!result.ok) {
@@ -14,7 +14,7 @@ export function SingleResult({ checkedUrl, result }) {
         : 'Host inacessível. Verifique se a URL está correta e o servidor está online.'
 
     return (
-      <section className="mt-8 rounded-2xl border border-red-200 bg-red-50 p-6">
+      <section className={`${embed ? '' : 'mt-8'} rounded-2xl border border-red-200 bg-red-50 p-6`}>
         <h3 className="text-sm font-semibold text-red-700">Não foi possível verificar</h3>
         <p className="mt-1 text-sm text-red-700/90">{message}</p>
       </section>
@@ -25,7 +25,7 @@ export function SingleResult({ checkedUrl, result }) {
 
   if (result.mode === 'no-cors') {
     return (
-      <section className="mt-8 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+      <section className={`${embed ? '' : 'mt-8 overflow-hidden rounded-2xl border border-zinc-200 shadow-sm'} bg-white`}>
         <div className="flex items-center gap-5 border-b border-zinc-100 p-6">
           <div className="text-5xl font-bold leading-none tracking-tight text-zinc-400">~</div>
           <div className="min-w-0 flex-1">
@@ -47,6 +47,10 @@ export function SingleResult({ checkedUrl, result }) {
     )
   }
 
+  const statusClass = classifyStatus(result.code)
+  const statusLabel = getStatusLabel(result.code)
+  const finalUrl = result.finalUrl || checkedUrl
+  const redirected = finalUrl !== checkedUrl
   const redirects = result.redirects || []
   const redirectCount = redirects.length
   const redirectedLabel = redirectCount > 0
@@ -68,7 +72,7 @@ export function SingleResult({ checkedUrl, result }) {
   }
 
   return (
-    <section className="mt-8 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+    <section className={`${embed ? '' : 'mt-8 overflow-hidden rounded-2xl border border-zinc-200 shadow-sm'} bg-white`}>
       <div className="flex flex-wrap items-center gap-5 border-b border-zinc-100 p-6">
         <div className="text-5xl font-bold leading-none tracking-tight text-zinc-800">{result.code}</div>
         <div className="min-w-0 flex-1">

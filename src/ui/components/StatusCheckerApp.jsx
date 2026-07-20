@@ -1,33 +1,16 @@
-import { ensureProtocol, extractHostname, parseBulkUrls } from '../../shared/url'
+import { parseBulkUrls } from '../../shared/url'
 import { useBulkChecker } from '../hooks/useBulkChecker'
-import { useSingleChecker } from '../hooks/useSingleChecker'
 import { useMemo, useState } from 'react'
 import { BulkModePanel } from './bulk/BulkModePanel'
-import { SingleModePanel } from './single/SingleModePanel'
 
 export function StatusCheckerApp() {
-  const [mode, setMode] = useState('single')
-  const [singleInput, setSingleInput] = useState('')
   const [bulkInput, setBulkInput] = useState('')
   const [bulkError, setBulkError] = useState('')
   const [concurrency, setConcurrency] = useState(10)
 
-  const single = useSingleChecker()
   const bulk = useBulkChecker()
 
   const bulkUrlCount = useMemo(() => parseBulkUrls(bulkInput).length, [bulkInput])
-
-  const loadingHost = singleInput.trim() ? extractHostname(ensureProtocol(singleInput.trim())) : 'servidor'
-
-  function submitSingle(event) {
-    event.preventDefault()
-    single.run(singleInput)
-  }
-
-  function applySample(url) {
-    setSingleInput(url)
-    single.run(url)
-  }
 
   function submitBulk(event) {
     event.preventDefault()
@@ -81,62 +64,26 @@ export function StatusCheckerApp() {
             Verifique o status de uma única URL ou analise centenas de links simultaneamente com rapidez e precisão.
           </p>
 
-          <div className="mt-8 inline-flex rounded-full border border-zinc-300 bg-white p-1 shadow-sm">
-            <button
-              type="button"
-              onClick={() => setMode('single')}
-              aria-pressed={mode === 'single'}
-              className={`cursor-pointer rounded-full px-5 py-2 text-sm font-medium transition ${
-                mode === 'single' ? 'bg-zinc-900 text-white' : 'text-zinc-500'
-              }`}
-            >
-              URL única
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode('bulk')}
-              aria-pressed={mode === 'bulk'}
-              className={`cursor-pointer rounded-full px-5 py-2 text-sm font-medium transition ${
-                mode === 'bulk' ? 'bg-zinc-900 text-white' : 'text-zinc-500'
-              }`}
-            >
-              Em lote
-            </button>
-          </div>
-
-          {mode === 'single' ? (
-            <SingleModePanel
-              singleInput={singleInput}
-              onSingleInputChange={setSingleInput}
-              onSubmitSingle={submitSingle}
-              onApplySample={applySample}
-              singleLoading={single.loading}
-              loadingHost={loadingHost}
-              checkedUrl={single.checkedUrl}
-              singleResult={single.result}
-            />
-          ) : (
-            <BulkModePanel
-              bulkInput={bulkInput}
-              onBulkInputChange={handleBulkInputChange}
-              onSubmitBulk={submitBulk}
-              bulkUrlCount={bulkUrlCount}
-              concurrency={concurrency}
-              onConcurrencyChange={setConcurrency}
-              bulkRunning={bulk.running}
-              bulkError={bulkError}
-              hasRows={bulk.rows.length > 0}
-              doneCount={bulk.doneCount}
-              totalRows={bulk.rows.length}
-              stats={bulk.stats}
-              onExportCsv={bulk.exportCsv}
-              visibleRows={bulk.sortedAndFilteredRows}
-              sort={bulk.sort}
-              onSort={bulk.toggleSort}
-              filters={bulk.filters}
-              onToggleFilter={bulk.toggleFilter}
-            />
-          )}
+          <BulkModePanel
+            bulkInput={bulkInput}
+            onBulkInputChange={handleBulkInputChange}
+            onSubmitBulk={submitBulk}
+            bulkUrlCount={bulkUrlCount}
+            concurrency={concurrency}
+            onConcurrencyChange={setConcurrency}
+            bulkRunning={bulk.running}
+            bulkError={bulkError}
+            hasRows={bulk.rows.length > 0}
+            doneCount={bulk.doneCount}
+            totalRows={bulk.rows.length}
+            stats={bulk.stats}
+            onExportCsv={bulk.exportCsv}
+            visibleRows={bulk.sortedAndFilteredRows}
+            sort={bulk.sort}
+            onSort={bulk.toggleSort}
+            filters={bulk.filters}
+            onToggleFilter={bulk.toggleFilter}
+          />
         </section>
 
         {/* CTA Diagnóstico Out Limit */}
