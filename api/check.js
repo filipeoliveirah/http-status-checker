@@ -220,6 +220,7 @@ function requestOnce(targetUrl, signal) {
 
 async function fetchWithSafeRedirects(initialUrl, signal) {
   let currentUrl = initialUrl
+  const redirects = []
 
   for (let redirectCount = 0; redirectCount <= MAX_REDIRECTS; redirectCount += 1) {
     const response = await requestOnce(currentUrl, signal)
@@ -227,16 +228,23 @@ async function fetchWithSafeRedirects(initialUrl, signal) {
 
     const isRedirect = status >= 300 && status < 400
     if (!isRedirect) {
-      return { response, finalUrl: currentUrl }
+      return { response, finalUrl: currentUrl, redirects }
     }
 
     const location = response.headers.location
     if (!location) {
-      return { response, finalUrl: currentUrl }
+      return { response, finalUrl: currentUrl, redirects }
     }
 
     const nextUrl = new URL(location, currentUrl)
     await assertSafeUrl(nextUrl)
+
+    redirects.push({
+      url: currentUrl.toString(),
+      statusCode: status,
+      location: nextUrl.toString(),
+    })
+
     currentUrl = nextUrl
   }
 
@@ -288,7 +296,7 @@ export default async function handler(req, res) {
   const timeout = createTimeoutSignal()
 
   try {
-    const { response, finalUrl } = await fetchWithSafeRedirects(parsedUrl, timeout.signal)
+    const { response, finalUrl, redirects } = await fetchWithSafeRedirects(parsedUrl, timeout.signal)
     timeout.clear()
 
     return res.status(200).json({
@@ -301,6 +309,7 @@ export default async function handler(req, res) {
       finalUrl: finalUrl.toString(),
       elapsed: Date.now() - startedAt,
       url: parsedUrl.toString(),
+      redirects,
     })
   } catch (error) {
     timeout.clear()

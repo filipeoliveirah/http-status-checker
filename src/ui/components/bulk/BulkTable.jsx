@@ -77,19 +77,49 @@ function BulkRow({ row, running }) {
   }
 
   const statusClass = classifyStatus(result.code)
+  const redirects = result.redirects || []
+  const hasRedirects = redirects.length > 0
+  const viaLabel = hasRedirects ? `redirect (${redirects.length})` : 'direto'
+  const viaClass = hasRedirects
+    ? 'bg-amber-50 text-amber-700 font-medium'
+    : 'bg-emerald-50 text-emerald-600'
 
   return (
     <tr className="border-t border-zinc-100 hover:bg-zinc-50/60">
-      <td className="max-w-[340px] truncate px-4 py-3 text-zinc-800">
-        <a href={row.url} target="_blank" rel="noreferrer" className="hover:text-indigo-600 hover:underline">
-          {row.url}
-        </a>
+      <td className="max-w-[380px] px-4 py-3 text-zinc-800">
+        <div className="truncate font-medium">
+          <a href={row.url} target="_blank" rel="noreferrer" className="hover:text-indigo-600 hover:underline">
+            {row.url}
+          </a>
+        </div>
+        {hasRedirects && (
+          <div className="mt-2 flex flex-col gap-1 text-[11px] text-zinc-500 border-l border-zinc-200 pl-2 ml-1">
+            {redirects.map((r, i) => (
+              <div key={i} className="flex items-center gap-1.5 min-w-0">
+                <span className="inline-flex items-center rounded bg-amber-50 px-1 text-[10px] font-semibold text-amber-700 border border-amber-200/50 shrink-0">
+                  {r.statusCode}
+                </span>
+                <span className="truncate max-w-[260px] text-zinc-400" title={r.url}>
+                  {r.url}
+                </span>
+              </div>
+            ))}
+            <div className="flex items-center gap-1 font-semibold text-emerald-600 min-w-0">
+              <span className="text-zinc-400 shrink-0">↳</span>
+              <span className="truncate max-w-[260px]" title={result.finalUrl}>
+                {result.finalUrl}
+              </span>
+            </div>
+          </div>
+        )}
       </td>
       <td className={`px-4 py-3 text-base font-bold ${STATUS_TEXT_CLASS[statusClass]}`}>{result.code}</td>
       <td className="px-4 py-3 text-zinc-600">{getStatusLabel(result.code)}</td>
       <td className="px-4 py-3 text-zinc-500">{formatElapsed(result.elapsed)}</td>
       <td className="px-4 py-3">
-        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-600">direto</span>
+        <span className={`rounded-full px-2 py-0.5 text-xs ${viaClass}`}>
+          {viaLabel}
+        </span>
       </td>
     </tr>
   )
