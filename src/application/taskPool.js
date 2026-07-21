@@ -3,16 +3,19 @@ export function runTaskPool({ tasks, limit, onTaskDone, onIdle }) {
   let active = 0
   let completed = 0
   let stopped = false
+  let notified = false
   const controller = new AbortController()
 
   function maybeIdle() {
+    if (notified) return
     if ((stopped || completed === tasks.length) && active === 0) {
+      notified = true
       onIdle?.()
     }
   }
 
   function schedule() {
-    if (stopped) {
+    if (stopped || tasks.length === 0) {
       maybeIdle()
       return
     }
@@ -22,16 +25,19 @@ export function runTaskPool({ tasks, limit, onTaskDone, onIdle }) {
       index += 1
       active += 1
 
-      Promise.resolve(tasks[currentIndex](controller.signal))
+      let taskPromise
+      try {
+        taskPromise = Promise.resolve(tasks[currentIndex](controller.signal))
+      } catch (syncError) {
+        taskPromise = Promise.reject(syncError)
+      }
+
+      taskPromise
         .then((result) => {
-          onTaskDone?.(currentIndex, result)
+          onTaskDone?.(currentIndex, result, null)
         })
         .catch((error) => {
-          onTaskDone?.(currentIndex, {
-            ok: false,
-            error: error?.message ?? 'unexpected',
-            elapsed: 0,
-          })
+          onTaskDone?.(currentIndex, null, error)
         })
         .finally(() => {
           active -= 1
@@ -47,8 +53,8 @@ export function runTaskPool({ tasks, limit, onTaskDone, onIdle }) {
   return {
     stop() {
       stopped = true
-      // Cancel in-flight requests instead of letting them run to completion.
       controller.abort()
+      maybeIdle()
     },
   }
 }

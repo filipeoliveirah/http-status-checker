@@ -36,4 +36,9 @@ describe('parseBulkUrls', () => {
   it('returns an empty array for blank input', () => {
     expect(parseBulkUrls('\n   \n')).toEqual([])
   })
+
+  it('canonicalizes url trails and casing', () => {
+    const input = 'http://EXAMPLE.com/\nhttp://example.com'
+    expect(parseBulkUrls(input)).toEqual(['http://example.com'])
+  })
 })

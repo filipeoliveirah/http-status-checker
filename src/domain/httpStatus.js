@@ -46,25 +46,45 @@ export const STATUS_LABELS = {
   511: 'Network Authentication Required',
 }
 
+/**
+ * Representa as categorias de status HTTP mapeadas pelo dígito inicial da classe.
+ * AVISO: Os valores numéricos brutos ('1', '2', etc.) são usados acoplados na UI
+ * para concatenações como `${statusClass}xx` (ex: "2xx") e filtros na tabela.
+ * A alteração desses valores quebrará a renderização e filtros da interface.
+ */
+export const HttpCategory = {
+  INFORMATIONAL: '1',
+  SUCCESS: '2',
+  REDIRECT: '3',
+  CLIENT_ERROR: '4',
+  SERVER_ERROR: '5',
+}
+
+const CATEGORY_ICON = {
+  [HttpCategory.INFORMATIONAL]: 'ℹ',
+  [HttpCategory.SUCCESS]: '✓',
+  [HttpCategory.REDIRECT]: '↪',
+  [HttpCategory.CLIENT_ERROR]: '⚠',
+  [HttpCategory.SERVER_ERROR]: '✗',
+}
+
 export function classifyStatus(code) {
-  if (code >= 100 && code < 200) return '1'
-  if (code >= 200 && code < 300) return '2'
-  if (code >= 300 && code < 400) return '3'
-  if (code >= 400 && code < 500) return '4'
-  return '5'
+  const parsed = Number(code)
+  if (isNaN(parsed) || parsed < 100 || parsed >= 600) return null
+
+  if (parsed >= 100 && parsed < 200) return HttpCategory.INFORMATIONAL
+  if (parsed >= 200 && parsed < 300) return HttpCategory.SUCCESS
+  if (parsed >= 300 && parsed < 400) return HttpCategory.REDIRECT
+  if (parsed >= 400 && parsed < 500) return HttpCategory.CLIENT_ERROR
+  return HttpCategory.SERVER_ERROR
 }
 
 export function getStatusLabel(code) {
-  return STATUS_LABELS[code] ?? 'Status desconhecido'
+  // Nota: Os status padrão da API são em inglês para manter o padrão técnico do protocolo HTTP.
+  return STATUS_LABELS[code] ?? 'Unknown status'
 }
 
 export function getStatusIcon(code) {
   const statusClass = classifyStatus(code)
-  return {
-    1: 'ℹ',
-    2: '✓',
-    3: '↪',
-    4: '⚠',
-    5: '✗',
-  }[statusClass]
+  return CATEGORY_ICON[statusClass] ?? '?'
 }

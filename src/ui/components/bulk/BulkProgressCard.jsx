@@ -1,3 +1,5 @@
+import { HttpCategory } from '../../../domain/httpStatus'
+
 export function BulkProgressCard({ doneCount, totalRows, stats }) {
   const percentage = totalRows ? Math.round((doneCount / totalRows) * 100) : 0
   const done = doneCount === totalRows
@@ -14,10 +16,10 @@ export function BulkProgressCard({ doneCount, totalRows, stats }) {
         <div className="h-full rounded-full bg-indigo-600 transition-all" style={{ width: `${percentage}%` }} />
       </div>
       <div className="mt-3 flex flex-wrap gap-4 text-xs text-zinc-600">
-        {stats[2] > 0 ? <span>{stats[2]} 2xx</span> : null}
-        {stats[3] > 0 ? <span>{stats[3]} 3xx</span> : null}
-        {stats[4] > 0 ? <span>{stats[4]} 4xx</span> : null}
-        {stats[5] > 0 ? <span>{stats[5]} 5xx</span> : null}
+        {stats[HttpCategory.SUCCESS] > 0 ? <span>{stats[HttpCategory.SUCCESS]} 2xx</span> : null}
+        {stats[HttpCategory.REDIRECT] > 0 ? <span>{stats[HttpCategory.REDIRECT]} 3xx</span> : null}
+        {stats[HttpCategory.CLIENT_ERROR] > 0 ? <span>{stats[HttpCategory.CLIENT_ERROR]} 4xx</span> : null}
+        {stats[HttpCategory.SERVER_ERROR] > 0 ? <span>{stats[HttpCategory.SERVER_ERROR]} 5xx</span> : null}
         {stats.cors > 0 ? <span>{stats.cors} CORS</span> : null}
         {stats.err > 0 ? <span>{stats.err} erro</span> : null}
       </div>

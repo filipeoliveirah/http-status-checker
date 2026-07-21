@@ -1,12 +1,33 @@
+import { isTimeoutError } from '../shared/time'
+
+// O timeout do cliente (12s) é pragmaticamente maior que o do servidor (9s)
+// para que o servidor possa abortar e retornar um JSON de timeout formatado
+// antes que o cliente encerre a requisição HTTP abruptamente.
 const REQUEST_TIMEOUT_MS = 12000
 
-// Combines the per-request timeout with an optional caller signal (e.g. the bulk
-// "Parar" button) so either one can abort the fetch.
+export class ApiUnavailableError extends Error {
+  constructor(message = 'api_not_available') {
+    super(message)
+    this.name = 'ApiUnavailableError'
+  }
+}
+
+// Combina o timeout por requisição com um sinal opcional do chamador (ex: botão Parar)
+// de modo que qualquer um dos dois possa abortar a requisição.
 function requestSignal(signal) {
   const timeout = AbortSignal.timeout(REQUEST_TIMEOUT_MS)
   if (!signal) return timeout
   if (typeof AbortSignal.any === 'function') return AbortSignal.any([signal, timeout])
-  return signal.aborted ? signal : timeout
+
+  const controller = new AbortController()
+  const onAbort = () => controller.abort()
+  if (signal.aborted) {
+    controller.abort()
+  } else {
+    signal.addEventListener('abort', onAbort)
+  }
+  timeout.addEventListener('abort', onAbort)
+  return controller.signal
 }
 
 function fetchViaServer(url, signal) {
@@ -19,7 +40,17 @@ function fetchViaServer(url, signal) {
     },
   }).then(async (response) => {
     if (!response.ok) {
-      throw new Error('server_check_failed')
+      if (response.status === 404) {
+        throw new ApiUnavailableError()
+      }
+      let serverError
+      try {
+        const payload = await response.json()
+        serverError = payload?.error
+      } catch {
+        // Ignorar payload não-JSON
+      }
+      throw new Error(serverError ?? 'server_check_failed')
     }
 
     const payload = await response.json()
@@ -58,58 +89,51 @@ function probeNoCors(url, signal) {
   }))
 }
 
-function isTimeoutError(error) {
-  return error?.name === 'AbortError' || error?.name === 'TimeoutError'
-}
-
 export async function checkUrlStatus(url, signal) {
   const startedAt = Date.now()
 
-  // Primary path: server-side check through Vercel function.
-  // This avoids browser CORS limitations and gives real status codes.
+  // Helpers para reduzir duplicação de envelopes de retorno (DRY / Composing Methods)
+  const meta = (result) => ({
+    ...result,
+    url,
+    elapsed: result.elapsed ?? (Date.now() - startedAt),
+  })
+
+  const failure = (error) => ({
+    ok: false,
+    url,
+    error,
+    elapsed: Date.now() - startedAt,
+  })
+
+  // Fluxo principal: checagem no servidor para contornar limites de CORS do navegador.
   try {
     const serverResult = await fetchViaServer(url, signal)
-    return {
-      ...serverResult,
-      elapsed: serverResult.elapsed ?? Date.now() - startedAt,
-      url: serverResult.url ?? url,
+    return meta(serverResult)
+  } catch (error) {
+    if (!(error instanceof ApiUnavailableError)) {
+      return failure(error?.message ?? 'server_check_failed')
     }
-  } catch {
-    // Fallback keeps local/dev behavior if API route is not available.
+    // Fallback mantém comportamento local se a API não estiver disponível (404).
   }
 
   try {
     const result = await fetchWithCors(url, signal)
-    return {
-      ...result,
-      elapsed: Date.now() - startedAt,
-      url,
-    }
+    return meta(result)
   } catch (error) {
     if (isTimeoutError(error)) {
-      return {
-        ok: false,
-        error: 'timeout',
-        elapsed: Date.now() - startedAt,
-        url,
-      }
+      return failure('timeout')
     }
+    // Erro de CORS/rede -> tenta probe no-cors como último fallback
   }
 
   try {
     await probeNoCors(url, signal)
-    return {
+    return meta({
       ok: true,
       mode: 'no-cors',
-      elapsed: Date.now() - startedAt,
-      url,
-    }
+    })
   } catch (error) {
-    return {
-      ok: false,
-      error: isTimeoutError(error) ? 'timeout' : 'unreachable',
-      elapsed: Date.now() - startedAt,
-      url,
-    }
+    return failure(isTimeoutError(error) ? 'timeout' : 'unreachable')
   }
 }

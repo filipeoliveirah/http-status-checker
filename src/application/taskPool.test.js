@@ -51,7 +51,7 @@ describe('runTaskPool', () => {
     expect(captured.aborted).toBe(true)
   })
 
-  it('reports a failed task as a result instead of throwing', async () => {
+  it('reports a failed task as an error parameter', async () => {
     const tasks = [async () => {
       throw new Error('boom')
     }]
@@ -60,10 +60,43 @@ describe('runTaskPool', () => {
       runTaskPool({
         tasks,
         limit: 1,
-        onTaskDone: (_index, result) => results.push(result),
+        onTaskDone: (_index, _result, error) => results.push(error),
         onIdle: resolve,
       })
     })
-    expect(results[0]).toMatchObject({ ok: false, error: 'boom' })
+    expect(results[0]).toBeInstanceOf(Error)
+    expect(results[0].message).toBe('boom')
+  })
+
+  it('recovers from synchronous throws in task functions', async () => {
+    const tasks = [
+      () => {
+        throw new Error('sync boom')
+      },
+      async () => ({ ok: true, data: 'recovered' }),
+    ]
+    const results = []
+    await new Promise((resolve) => {
+      runTaskPool({
+        tasks,
+        limit: 1,
+        onTaskDone: (index, result, error) => results.push({ index, result, error }),
+        onIdle: resolve,
+      })
+    })
+
+    expect(results).toHaveLength(2)
+    expect(results[0]).toMatchObject({
+      index: 0,
+      result: null,
+    })
+    expect(results[0].error).toBeInstanceOf(Error)
+    expect(results[0].error.message).toBe('sync boom')
+
+    expect(results[1]).toMatchObject({
+      index: 1,
+      result: { ok: true, data: 'recovered' },
+      error: null,
+    })
   })
 })

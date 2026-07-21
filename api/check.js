@@ -3,6 +3,7 @@ import https from 'node:https'
 import net from 'node:net'
 import { lookup as dnsLookup } from 'node:dns'
 import { lookup as dnsLookupAsync } from 'node:dns/promises'
+import { isTimeoutError } from '../src/shared/time.js'
 
 // Keep the request timeout safely below Vercel's function maxDuration (see
 // vercel.json) so the graceful timeout below actually fires before the platform
@@ -314,7 +315,7 @@ export default async function handler(req, res) {
   } catch (error) {
     timeout.clear()
 
-    const isTimeout = error?.name === 'AbortError' || error?.name === 'TimeoutError'
+    const isTimeout = isTimeoutError(error)
     const isRedirectLoop = error?.message === 'redirect_loop'
     return res.status(200).json({
       ok: false,

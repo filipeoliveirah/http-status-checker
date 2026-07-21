@@ -71,17 +71,20 @@ export function SingleResult({ checkedUrl, result, embed = false }) {
     details.unshift(['location', finalUrl])
   }
 
+  const statusTextClass = STATUS_TEXT_CLASS[statusClass] ?? 'text-zinc-600'
+  const pillText = statusClass ? `${statusClass}xx` : '—'
+
   return (
     <section className={`${embed ? '' : 'mt-8 overflow-hidden rounded-2xl border border-zinc-200 shadow-sm'} bg-white`}>
       <div className="flex flex-wrap items-center gap-5 border-b border-zinc-100 p-6">
         <div className="text-5xl font-bold leading-none tracking-tight text-zinc-800">{result.code}</div>
         <div className="min-w-0 flex-1">
-          <p className={`text-lg font-semibold ${STATUS_TEXT_CLASS[statusClass]}`}>
+          <p className={`text-lg font-semibold ${statusTextClass}`}>
             {getStatusIcon(result.code)} {statusLabel}
           </p>
           <p className="truncate text-sm text-zinc-500">{finalUrl}</p>
         </div>
-        <StatusPill statusClass={statusClass} text={`${statusClass}xx`} />
+        <StatusPill statusClass={statusClass ?? '5'} text={pillText} />
       </div>
 
       <div className="grid gap-4 border-b border-zinc-100 p-6 md:grid-cols-4">

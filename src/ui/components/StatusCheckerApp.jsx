@@ -65,6 +65,7 @@ export function StatusCheckerApp() {
           </p>
 
           <BulkModePanel
+            runId={bulk.runId}
             bulkInput={bulkInput}
             onBulkInputChange={handleBulkInputChange}
             onSubmitBulk={submitBulk}

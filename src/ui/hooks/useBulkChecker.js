@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { exportBulkRowsToCsv } from '../../application/exportCsv'
 import { runTaskPool } from '../../application/taskPool'
-import { classifyStatus } from '../../domain/httpStatus'
+import { classifyStatus, HttpCategory } from '../../domain/httpStatus'
 import { checkUrlStatus } from '../../infra/httpStatusGateway'
 import { parseBulkUrls } from '../../shared/url'
 
@@ -17,18 +17,26 @@ export function useBulkChecker() {
   const [rows, setRows] = useState([])
   const [sort, setSort] = useState({ column: null, asc: true })
   const [filters, setFilters] = useState({
-    2: true,
-    3: true,
-    4: true,
-    5: true,
+    [HttpCategory.SUCCESS]: true,
+    [HttpCategory.REDIRECT]: true,
+    [HttpCategory.CLIENT_ERROR]: true,
+    [HttpCategory.SERVER_ERROR]: true,
     cors: true,
     err: true,
   })
+  const [runId, setRunId] = useState(0)
   const runIdRef = useRef(0)
   const poolRef = useRef(null)
 
   const stats = useMemo(() => {
-    const output = { 2: 0, 3: 0, 4: 0, 5: 0, cors: 0, err: 0 }
+    const output = {
+      [HttpCategory.SUCCESS]: 0,
+      [HttpCategory.REDIRECT]: 0,
+      [HttpCategory.CLIENT_ERROR]: 0,
+      [HttpCategory.SERVER_ERROR]: 0,
+      cors: 0,
+      err: 0,
+    }
     rows.forEach((row) => {
       const key = getRowFilterKey(row)
       if (output[key] !== undefined) {
@@ -124,8 +132,9 @@ export function useBulkChecker() {
       return { started: false }
     }
 
-    const runId = runIdRef.current + 1
-    runIdRef.current = runId
+    const nextRunId = runIdRef.current + 1
+    runIdRef.current = nextRunId
+    setRunId(nextRunId)
 
     const initialRows = urls.map((url) => ({
       url,
@@ -142,16 +151,25 @@ export function useBulkChecker() {
     poolRef.current = runTaskPool({
       tasks,
       limit: concurrency,
-      onTaskDone: (index, result) => {
-        if (runIdRef.current !== runId) return
+      onTaskDone: (index, result, error) => {
+        if (runIdRef.current !== nextRunId) return
+        const finalResult = error
+          ? {
+              ok: false,
+              error: error?.message ?? 'unexpected',
+              elapsed: 0,
+              url: urls[index],
+            }
+          : result
+
         setRows((current) =>
           current.map((row, rowIndex) =>
-            rowIndex === index ? { ...row, status: 'done', result } : row,
+            rowIndex === index ? { ...row, status: 'done', result: finalResult } : row,
           ),
         )
       },
       onIdle: () => {
-        if (runIdRef.current !== runId) return
+        if (runIdRef.current !== nextRunId) return
         setRunning(false)
       },
     })
@@ -171,6 +189,7 @@ export function useBulkChecker() {
     sortedAndFilteredRows,
     sort,
     filters,
+    runId,
     run,
     stop,
     exportCsv,

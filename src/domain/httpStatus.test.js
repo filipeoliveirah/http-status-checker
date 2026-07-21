@@ -17,9 +17,10 @@ describe('classifyStatus', () => {
     expect(classifyStatus(101)).not.toBe('5')
   })
 
-  it('falls back to 5 for out-of-range codes', () => {
-    expect(classifyStatus(0)).toBe('5')
-    expect(classifyStatus(99)).toBe('5')
+  it('returns null for out-of-range codes', () => {
+    expect(classifyStatus(0)).toBeNull()
+    expect(classifyStatus(99)).toBeNull()
+    expect(classifyStatus(600)).toBeNull()
   })
 })
 
@@ -29,7 +30,7 @@ describe('getStatusLabel', () => {
   })
 
   it('returns a fallback for unknown codes', () => {
-    expect(getStatusLabel(799)).toBe('Status desconhecido')
+    expect(getStatusLabel(799)).toBe('Unknown status')
   })
 })
 

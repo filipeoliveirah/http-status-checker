@@ -2,6 +2,7 @@ import { BulkProgressCard } from './BulkProgressCard'
 import { BulkTable } from './BulkTable'
 
 export function BulkModePanel({
+  runId,
   bulkInput,
   onBulkInputChange,
   onSubmitBulk,
@@ -78,7 +79,8 @@ export function BulkModePanel({
           </div>
 
           <BulkTable
-            rows={visibleRows}
+            key={runId}
+            visibleRows={visibleRows}
             running={bulkRunning}
             sort={sort}
             onSort={onSort}
